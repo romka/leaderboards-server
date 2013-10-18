@@ -47,6 +47,7 @@ class Leaderboards:
 
         # insert some data
         for item in items:
+            log.msg('try to insert ' + item['name'] + ', ' + item['score'])
             result = yield records.insert({'name': item['name'], 'score': item['score'], 'timestamp': item['timestamp']}, safe=True)
             print result
 
@@ -168,7 +169,7 @@ class Leaderboards:
             for i in range(1, len(data)):
                 ch = self.convert(ord(data[i, i]), self.sequence[counter], direction)
                 ch = str(ch)
-                while len(ch) < 5:
+                while len(ch) < 3:
                     ch = '0' + ch
 
                 result = result + ch
@@ -181,8 +182,8 @@ class Leaderboards:
             #log.msg(len(data))
             #log.msg(data)
             xxx = ''
-            for i in range(0, len(data), 5):
-                ch = int(data[i: i + 5])
+            for i in range(0, len(data), 3):
+                ch = int(data[i: i + 3])
                 ch2 = self.convert(ch, self.sequence[counter], direction)
 
                 #xxx = xxx + ', ' + str(ch2)
