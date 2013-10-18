@@ -7,20 +7,27 @@ from leaderboards import Leaderboards
 
 from twisted.python import log
 
+log.msg('LeaderboardsServerFactory')
 
 class LeaderboardsServerFactory(ServerFactory):
 
     protocol = LeaderboardsProtocol
 
-    def __init__(self, max_clients, service):
+    def startFactory(self):
+        self.leaderboards_service = Leaderboards(self.max_clients, self.db_name, self.db_host, self.db_port)
+
+    def __init__(self, max_clients, service, db_name, db_host, db_port):
         """
           Server factory constructor
         """
-        log.msg('Leaderboards server initialized')
 
-        # parameters#
-        self.leaderboards_service = Leaderboards(max_clients)
         self.service = service
+        self.max_clients = max_clients
+        self.db_name = db_name
+        self.db_host = db_host
+        self.db_port = db_port
+
+        log.msg('Leaderboards server initialized')
 
     def buildProtocol(self, addr):
         """
