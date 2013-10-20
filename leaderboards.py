@@ -2,61 +2,44 @@ __author__ = 'Roman Aarkharov'
 
 import simplejson as json
 import time
-import txmongo
 from twisted.python import log
-from twisted.internet import defer
 
+from db import Db
+from crypt import Crypt
 
 class Leaderboards:
     """
       Main game class.
     """
     def __init__(self, max_clients, db_name, db_host, db_port):
+        """
+            Constructor.
+        """
         self.server_status = 'not ready'
+        # Sequence bellow showld be the same as on client application
         self.sequence = [99, 143, 127, 182, 214, 17, 76, 92, 213, 199, 7, 43, 73, 197, 193, 5, 14, 88, 231, 94, 1, 183, 91, 191, 19, 237, 7, 85, 172, 41, 97, 29, 61, 111, 222]
         self.apps = []
+        self.clients = {}
 
         self.max_clients = max_clients
-        self.db_name = db_name
-        self.db_host = db_host
-        self.db_port = db_port
 
-        self.db_init().addCallback(self._on_db_init_response)
+        self.db = Db(self, db_name, db_host, db_port)
+        self.crypt = Crypt(self.sequence)
 
-    @defer.inlineCallbacks
-    def db_init(self):
-        mongo = yield txmongo.MongoConnection(host=self.db_host, port=self.db_port)
-
-        db = mongo[self.db_name]  # `foo` database
-        apps = db.apps  # `test` collection
-
-        # fetch some documents
-        items = yield apps.find(limit=10)
-        for item in items:
-            tmp = {}
-            tmp['name'] = item['name']
-            tmp['secret'] = item['secret']
-            self.apps.append(tmp)
-
-    @defer.inlineCallbacks
-    def db_insert(self, items):
-        mongo = yield txmongo.MongoConnection(host=self.db_host, port=self.db_port)
-
-        db = mongo[self.db_name]  # `foo` database
-        records = db.records  # `test` collection
-
-        # insert some data
-        for item in items:
-            log.msg('try to insert ' + item['name'] + ', ' + item['score'])
-            result = yield records.insert({'name': item['name'], 'score': item['score'], 'timestamp': item['timestamp']}, safe=True)
-            print result
-
-
-    def _on_db_init_response(self, response):
-        self.server_status = 'ready'
+    def _on_db_init_response(self, value, apps):
+        """
+            Callback for DB initialization function (class Db).
+        """
+        self.apps = apps
+        if len(self.apps):
+            self.server_status = 'ready'
 
     def checkServerStatus(self):
-        if self.server_status != 'ready':
+        """
+            Tis function calls from class LeaderboardsProtocol pn connectionMade method to check
+            if server ready to process user data or not.
+        """
+        if self.server_status != 'ready' or len(self.clients) > self.max_clients:
             return False
         return True
 
@@ -70,35 +53,42 @@ class Leaderboards:
         client.server_status = self.server_status
         client.chunks_amount = None
         client.chunks = None
-        client.chunks_amount = None
         client.data = ''
 
-        log_msg = 'class Leadreboards, method initClient: %s, %s:%s' % (addr.type, addr.host, addr.port,)
+
+        client.mode = None
+        client.max_score = 0
+        client.best_item = None
+        client.top = []
+        client.best_item_place = None
+
+
+        log_msg = 'class Leadreboards, client %s initialized' % (client.client_id,)
         log.msg(log_msg)
 
-
+        # Add new client to global dictionary
+        self.clients[client.client_id] = client
 
         return client
 
-    def saveUserRecords(self, data):
-        log.msg('received data')
-        log.msg(len(data))
-        log.msg(data)
+    def processUserRecords(self, client_id, data):
+        #log.msg('processUserRecords: received data')
+        #log.msg(len(data))
+        #log.msg(data)
 
         decoded_data = self.decodeUserRecords(data)
 
-
-        log.msg('decrypted')
-        log.msg(decoded_data)
+        #log.msg('decrypted')
+        #log.msg(decoded_data)
 
         user_results = json.loads(decoded_data)
 
-        mode = user_results.get('mode', None)
+        self.mode = mode = user_results.get('mode', None)
         app_name = user_results.get('app_name', None)
         app_secret = user_results.get('app_secret', None)
         results = user_results.get('local_records', None)
 
-        if mode == None or app_name == None or app_secret == None or results == None:
+        if mode is None or app_name is None or app_secret is None or results is None:
             return 'wrong request'
 
         app_check = False
@@ -120,13 +110,11 @@ class Leaderboards:
             if isinstance(result, dict):
                 name = result.get('name', None)
                 score = result.get('value', None)
-                timestamp = result.get('time', None)
                 record_id = result.get('record_id', None)
 
-                if name != None and score != None and record_id != None:
+                if name is not None and score is not None and record_id is not None:
                     #name = self.crypt(name, True)
                     name = base64.b64decode(name)
-
 
                     timestamp = int(time.time())
 
@@ -134,68 +122,62 @@ class Leaderboards:
                     item['name'] = name
                     item['score'] = score
                     item['timestamp'] = timestamp
+                    item['record_id'] = record_id
+                    item['mode'] = mode
+
+                    if score > self.clients[client_id].max_score:
+                        self.clients[client_id].max_score = score
+                        self.clients[client_id].best_item = item
 
                     items.append(item)
 
-        self.db_insert(items).addCallback(lambda ign: log.msg('Data inserted'))
+        self.db.insert(items).addCallback(self._on_db_insert_response, client_id).addErrback(self._on_db_error, client_id)
+
+        return 'wait for db'
+
+    def _on_db_insert_response(self, value, client_id):
+        """
+            Callback for DB insert function (class Db).
+        """
+        log.msg('Data inserted for client ' + str(client_id))
+
+        self.retrieveTopResults(client_id)
+
+    def retrieveTopResults(self, client_id):
+        """
+            Retrieve best results from DB and send to client,
+        """
+
+        self.db.get_top(client_id, self.mode).addCallback(self._on_db_get_top_response, client_id).addErrback(self._on_db_error, client_id)
+
+    def _on_db_get_top_response(self, value, client_id):
+        #log.msg('top10 number ' + str(len(self.clients[client_id].top)))
+        #log.msg(str(self.clients[client_id].top[0]['name']))
+        #for result in self.clients[client_id].top:
+        #    log.msg('top item: ' + unicode(result['name']) + ' ' + str(result['score']))
+
+        j = json.dumps(self.clients[client_id].top)
+        c = self.crypt.crypt(j)
+
+        self.clients[client_id].writeData(c)
+        self.clients[client_id].transport.loseConnection()
+        del self.clients[client_id]
+
+    def _on_db_init_error(self, value):
+        """
+            DB initialization errorback.
+        """
+        log.msg('DB init errorback. Something went wrong in DB')
+
+    def _on_db_error(self, value, client_id):
+        """
+            Errorback for client interaction with DB.
+        """
+        log.msg('DB errorback. Something went wrong in DB: ' + str(value))
+        self.clients[client_id].writeData('4')
+        self.clients[client_id].transport.loseConnection()
 
     def decodeUserRecords(self, data):
         log.msg('decodeUserRecords')
-        return self.crypt(data, True)
+        return self.crypt.decrypt(data)
 
-    def retrieveRecords(self):
-        log.msg('retireved records')
-        records = 'records list'
-        return records
-
-    def convert(self, byte, key, direction):
-        new = ''
-        if direction == False:
-            new = byte + key
-            if new > 255:
-                new = new - 255
-        else:
-            new = byte - key
-            if new < 0:
-                new = new + 255
-        return new
-    
-    def crypt(self, data, direction):
-        result = ''
-        max_counter = len(self.sequence)
-        counter = 0
-
-        if direction == False:
-            for i in range(1, len(data)):
-                ch = self.convert(ord(data[i, i]), self.sequence[counter], direction)
-                ch = str(ch)
-                while len(ch) < 3:
-                    ch = '0' + ch
-
-                result = result + ch
-
-                counter = counter + 1
-                if counter > max_counter:
-                    counter = 1
-        else:
-            #log.msg('incoming data')
-            #log.msg(len(data))
-            #log.msg(data)
-            xxx = ''
-            for i in range(0, len(data), 3):
-                ch = int(data[i: i + 3])
-                ch2 = self.convert(ch, self.sequence[counter], direction)
-
-                #xxx = xxx + ', ' + str(ch2)
-                xxx = xxx + 'ch = ' + str(ch) + ', ch2 = ' + str(ch2) + ' ||| '
-
-                result = result + chr(ch2)
-
-                counter = counter + 1
-                if counter >= max_counter:
-                    counter = 0
-
-            #log.msg('decrypted chars')
-            #log.msg(xxx)
-
-        return result
