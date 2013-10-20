@@ -14,9 +14,9 @@ class LeaderboardsServerFactory(ServerFactory):
     protocol = LeaderboardsProtocol
 
     def startFactory(self):
-        self.leaderboards_service = Leaderboards(self.max_clients, self.db_name, self.db_host, self.db_port)
+        self.leaderboards_service = Leaderboards(self.max_clients, self.db_name, self.db_host, self.db_port, self.secret)
 
-    def __init__(self, max_clients, service, db_name, db_host, db_port):
+    def __init__(self, max_clients, service, db_name, db_host, db_port, secret):
         """
           Server factory constructor
         """
@@ -26,6 +26,7 @@ class LeaderboardsServerFactory(ServerFactory):
         self.db_name = db_name
         self.db_host = db_host
         self.db_port = db_port
+        self.secret = secret
 
         log.msg('Leaderboards server initialized')
 

@@ -1,12 +1,18 @@
 __author__ = 'Roman Arkharov'
 
-import optparse
+from optparse import OptionParser
 
 from serverfactory import LeaderboardsServerFactory
 
 from twisted.application import internet, service
 from twisted.python import log
 
+secret = [line.strip() for line in open('secret.py')]
+log.msg(secret)
+
+secret2 = []
+for s in secret:
+    secret2.append(int(s))
 
 host = 'kece.ru'
 port = 10088
@@ -22,7 +28,7 @@ leaderboards_service = service.Service()
 leaderboards_service.setServiceParent(top_service)
 
 log.msg('before init LeaderboardsServerFactory')
-factory = LeaderboardsServerFactory(max_clients, leaderboards_service, db_name, db_host, db_port)
+factory = LeaderboardsServerFactory(max_clients, leaderboards_service, db_name, db_host, db_port, secret2)
 log.msg('after init LeaderboardsServerFactory')
 
 tcp_service = internet.TCPServer(port, factory, interface=host)

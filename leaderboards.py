@@ -11,13 +11,17 @@ class Leaderboards:
     """
       Main game class.
     """
-    def __init__(self, max_clients, db_name, db_host, db_port):
+    def __init__(self, max_clients, db_name, db_host, db_port, secret):
         """
             Constructor.
         """
         self.server_status = 'not ready'
         # Sequence bellow showld be the same as on client application
-        self.sequence = [99, 143, 127, 182, 214, 17, 76, 92, 213, 199, 7, 43, 73, 197, 193, 5, 14, 88, 231, 94, 1, 183, 91, 191, 19, 237, 7, 85, 172, 41, 97, 29, 61, 111, 222]
+        #self.sequence = [99, 143, 127, 182, 214, 17, 76, 92, 213, 199, 7, 43, 73, 197, 193, 5, 14, 88, 231, 94, 1, 183, 91, 191, 19, 237, 7, 85, 172, 41, 97, 29, 61, 111, 222]
+        self.sequence = secret
+
+        log.msg(secret)
+
         self.apps = []
         self.clients = {}
 
@@ -125,7 +129,9 @@ class Leaderboards:
                     item['record_id'] = record_id
                     item['mode'] = mode
 
-                    if score > self.clients[client_id].max_score:
+                    print('current best ' + str(self.clients[client_id].max_score) + '; score ' + str(score))
+                    if int(score) > int(self.clients[client_id].max_score):
+                        print('set this item as best because ' + str(score) + ' gt ' + str(self.clients[client_id].max_score))
                         self.clients[client_id].max_score = score
                         self.clients[client_id].best_item = item
 
@@ -156,7 +162,32 @@ class Leaderboards:
         #for result in self.clients[client_id].top:
         #    log.msg('top item: ' + unicode(result['name']) + ' ' + str(result['score']))
 
-        j = json.dumps(self.clients[client_id].top)
+        if self.clients[client_id].best_item is None or self.clients[client_id].best_item['score'] is None:
+            score = 0
+            self.clients[client_id].best_item = {}
+            self.clients[client_id].best_item['score'] = 0
+            self.clients[client_id].best_item['record_id'] = 'some-unexisting-value'
+        else:
+            score = self.clients[client_id].best_item['score']
+
+        self.db.get_user_best(client_id, score, self.clients[client_id].mode)\
+            .addCallback(self._on_db_get_user_best_response, client_id)\
+            .addErrback(self._on_db_error, client_id)
+
+    def _on_db_get_user_best_response(self, value, client_id):
+        log.msg('best score ' + str(self.clients[client_id].best_item['score']))
+        log.msg('best id ' + self.clients[client_id].best_item['record_id'])
+        log.msg('best place ' + str(self.clients[client_id].best_item_place))
+
+        self.send_data_and_close_connection(client_id)
+
+
+    def send_data_and_close_connection(self, client_id):
+        result = {}
+        result['top'] = self.clients[client_id].top
+        result['place'] = self.clients[client_id].best_item_place
+
+        j = json.dumps(result)
         c = self.crypt.crypt(j)
 
         self.clients[client_id].writeData(c)

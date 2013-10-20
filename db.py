@@ -74,7 +74,7 @@ class Db:
                 {
                     'record_id': item['record_id'],
                     'mode': item['mode'],
-                    'score': item['score'],
+                    'score': int(item['score']),
                     'name': item['name'],
                 }).count()
 
@@ -82,7 +82,7 @@ class Db:
                 value = yield async_records.insert(
                     {
                         'name': item['name'],
-                        'score': item['score'],
+                        'score': int(item['score']),
                         'timestamp': item['timestamp'],
                         'record_id': item['record_id'],
                         'mode': item['mode'],
@@ -120,3 +120,22 @@ class Db:
             tmp['timestamp'] = item['timestamp']
             #log.msg(tmp)
             self.parent.clients[client_id].top.append(tmp)
+
+    @defer.inlineCallbacks
+    def get_user_best(self, client_id, score, mode):
+        """
+            Try to get top 10 from DB.
+        """
+        log.msg('class Db, method get_user_best')
+
+        # Async mongo connection
+        async_mongo = yield txmongo.MongoConnection(host=self.db_host, port=self.db_port)
+        async_db = async_mongo[self.db_name]
+        async_records = async_db.records
+
+        best_place = yield async_records.find({'score': {'$gte': score,}, 'mode': mode,})
+        count = 1
+        for item in best_place:
+            count += 1
+
+        self.parent.clients[client_id].best_item_place = count
