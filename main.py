@@ -7,6 +7,7 @@ from serverfactory import LeaderboardsServerFactory
 from twisted.application import internet, service
 from twisted.python import log
 
+# Rename example_secret.py to secret.py and fill it with your own values between 1 and 255
 secret = [line.strip() for line in open('secret.py')]
 log.msg(secret)
 

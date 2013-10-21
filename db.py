@@ -133,9 +133,14 @@ class Db:
         async_db = async_mongo[self.db_name]
         async_records = async_db.records
 
-        best_place = yield async_records.find({'score': {'$gte': score,}, 'mode': mode,})
-        count = 1
+        best_place = yield async_records.find({'score': {"$gte": int(score), }, 'mode': mode, })
+        count = -1
         for item in best_place:
+            log.msg('score: ' + str(item['score']))
+            if count == -1:
+                count = 0
             count += 1
+
+        log.msg('score ' + str(score) + '; mode ' + str(mode) + '; global place ' + str(count))
 
         self.parent.clients[client_id].best_item_place = count

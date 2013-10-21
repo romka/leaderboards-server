@@ -87,7 +87,7 @@ class Leaderboards:
 
         user_results = json.loads(decoded_data)
 
-        self.mode = mode = user_results.get('mode', None)
+        self.clients[client_id].mode = mode = user_results.get('mode', None)
         app_name = user_results.get('app_name', None)
         app_secret = user_results.get('app_secret', None)
         results = user_results.get('local_records', None)
@@ -154,7 +154,7 @@ class Leaderboards:
             Retrieve best results from DB and send to client,
         """
 
-        self.db.get_top(client_id, self.mode).addCallback(self._on_db_get_top_response, client_id).addErrback(self._on_db_error, client_id)
+        self.db.get_top(client_id, self.clients[client_id].mode).addCallback(self._on_db_get_top_response, client_id).addErrback(self._on_db_error, client_id)
 
     def _on_db_get_top_response(self, value, client_id):
         #log.msg('top10 number ' + str(len(self.clients[client_id].top)))
