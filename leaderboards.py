@@ -53,6 +53,7 @@ class Leaderboards:
         """
 
         client.client_id = addr.port
+        client.host = addr.host
 
         client.server_status = self.server_status
         client.chunks_amount = None
@@ -137,7 +138,9 @@ class Leaderboards:
 
                     items.append(item)
 
-        self.db.insert(items).addCallback(self._on_db_insert_response, client_id).addErrback(self._on_db_error, client_id)
+        self.db.insert(items, self.clients[client_id].host)\
+            .addCallback(self._on_db_insert_response, client_id)\
+            .addErrback(self._on_db_error, client_id)
 
         return 'wait for db'
 
@@ -154,7 +157,9 @@ class Leaderboards:
             Retrieve best results from DB and send to client,
         """
 
-        self.db.get_top(client_id, self.clients[client_id].mode).addCallback(self._on_db_get_top_response, client_id).addErrback(self._on_db_error, client_id)
+        self.db.get_top(client_id, self.clients[client_id].mode)\
+            .addCallback(self._on_db_get_top_response, client_id)\
+            .addErrback(self._on_db_error, client_id)
 
     def _on_db_get_top_response(self, value, client_id):
         #log.msg('top10 number ' + str(len(self.clients[client_id].top)))

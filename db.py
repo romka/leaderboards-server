@@ -43,7 +43,7 @@ class Db:
             self.apps.append(tmp)
 
     @defer.inlineCallbacks
-    def insert(self, items):
+    def insert(self, items, host):
         """
             Try to put data to DB.
         """
@@ -60,6 +60,9 @@ class Db:
 
         sync_db = sync_mongo[self.db_name]
         sync_records = sync_db.records
+
+        if host is None:
+            host = ''
 
         # insert some data
         for item in items:
@@ -79,13 +82,14 @@ class Db:
                 }).count()
 
             if count == 0:
-                value = yield async_records.insert(
+                yield async_records.insert(
                     {
                         'name': item['name'],
                         'score': int(item['score']),
                         'timestamp': item['timestamp'],
                         'record_id': item['record_id'],
                         'mode': item['mode'],
+                        'host': host,
                     }, safe=True)
                 log.msg('record inserted ' + item['record_id'])
             else:

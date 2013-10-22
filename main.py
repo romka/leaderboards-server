@@ -17,6 +17,7 @@ for s in secret:
 
 host = 'kece.ru'
 port = 10088
+http_port = 10089
 max_clients = 10000
 
 db_host = '10.20.2.105'
@@ -34,6 +35,15 @@ log.msg('after init LeaderboardsServerFactory')
 
 tcp_service = internet.TCPServer(port, factory, interface=host)
 tcp_service.setServiceParent(top_service)
+
+# LeaderboardsWebserver should be imported after factory object creation
+from http_responder import LeaderboardsWebserver
+from twisted.web.server import Site
+
+results = LeaderboardsWebserver(db_name, db_host, db_port)
+results_factory = Site(results)
+tcp_results_service = internet.TCPServer(http_port, results_factory, interface=host)
+tcp_results_service.setServiceParent(top_service)
 
 application = service.Application("main")
 
