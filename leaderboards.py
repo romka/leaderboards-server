@@ -138,7 +138,7 @@ class Leaderboards:
 
                     items.append(item)
 
-        self.db.insert(items, self.clients[client_id].host)\
+        self.db.check_unique_and_insert(items, self.clients[client_id].host)\
             .addCallback(self._on_db_insert_response, client_id)\
             .addErrback(self._on_db_error, client_id)
 

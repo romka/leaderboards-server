@@ -43,4 +43,10 @@ class LeaderboardsWebserver(Resource):
 
             result[mode] = r
 
-        return json.dumps(result)
+        jsonp = json.dumps(result)
+        jsonp = 'jsonCallback(' + jsonp + ');'
+
+        request.setHeader('Content-Type', 'application/javascript')
+
+
+        return jsonp

@@ -43,7 +43,7 @@ class Db:
             self.apps.append(tmp)
 
     @defer.inlineCallbacks
-    def insert(self, items, host):
+    def check_unique_and_insert(self, items, host):
         """
             Try to put data to DB.
         """
