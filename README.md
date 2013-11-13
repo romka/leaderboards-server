@@ -10,7 +10,7 @@ To run this server yo need to have installed Python 2.7 or greater, Twisted 12 o
   * in console mode (for testing purposes): `twistd --nodaemon --python main.py`
   * in daemon mode (for production purposes): `twistd --python main.py`
 
-Example of client for this server you can find here: https://github.com/romka/leaderboards-gideros-client.
+Example of the client for this server you can find here: https://github.com/romka/leaderboards-gideros-client.
 
 This server listens two ports: 
 * first port (10088 by default) uses for recieve/send data to/from client, 
