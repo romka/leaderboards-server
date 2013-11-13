@@ -116,6 +116,7 @@ class Db:
             name = item['name']
             name = name.encode('utf-8-sig')
             name = base64.b64encode(name)
+            #name = base64.b64encode(name, self.parent.base64_alt)
             name = name.replace('77u/', '')
 
             tmp = {}

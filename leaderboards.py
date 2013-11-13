@@ -19,6 +19,7 @@ class Leaderboards:
         # Sequence bellow showld be the same as on client application
         #self.sequence = [99, 143, 127, 182, 214, 17, 76, 92, 213, 199, 7, 43, 73, 197, 193, 5, 14, 88, 231, 94, 1, 183, 91, 191, 19, 237, 7, 85, 172, 41, 97, 29, 61, 111, 222]
         self.sequence = secret
+        self.base64_alt = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
 
         log.msg(secret)
 
