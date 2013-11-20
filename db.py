@@ -96,11 +96,14 @@ class Db:
                 log.msg('record NOT inserted ' + item['record_id'])
 
     @defer.inlineCallbacks
-    def get_top(self, client_id, mode):
+    def get_top(self, client_id, mode, game_type):
         """
             Try to get top 10 from DB.
         """
         log.msg('class Db, method get_top, mode = ' + mode)
+
+        if game_type != 'tetcolor':
+            mode = game_type + '_' + mode
 
         # Async mongo connection
         async_mongo = yield txmongo.MongoConnection(host=self.db_host, port=self.db_port)
@@ -127,11 +130,14 @@ class Db:
             self.parent.clients[client_id].top.append(tmp)
 
     @defer.inlineCallbacks
-    def get_user_best(self, client_id, score, mode):
+    def get_user_best(self, client_id, score, mode, game_type):
         """
             Try to get top 10 from DB.
         """
         log.msg('class Db, method get_user_best')
+
+        if game_type != 'tetcolor':
+            mode = game_type + '_' + mode
 
         # Async mongo connection
         async_mongo = yield txmongo.MongoConnection(host=self.db_host, port=self.db_port)
@@ -141,7 +147,7 @@ class Db:
         best_place = yield async_records.find({'score': {"$gte": int(score), }, 'mode': mode, })
         count = -1
         for item in best_place:
-            log.msg('score: ' + str(item['score']))
+            #log.msg('score: ' + str(item['score']))
             if count == -1:
                 count = 0
             count += 1

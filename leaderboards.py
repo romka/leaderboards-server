@@ -63,6 +63,7 @@ class Leaderboards:
 
 
         client.mode = None
+        client.game_type = None
         client.max_score = 0
         client.best_item = None
         client.top = []
@@ -90,10 +91,13 @@ class Leaderboards:
         user_results = json.loads(decoded_data)
 
         self.clients[client_id].mode = mode = user_results.get('mode', None)
+        self.clients[client_id].game_type = game_type = user_results.get('game_type', 'tetcolor')
         app_name = user_results.get('app_name', None)
         app_secret = user_results.get('app_secret', None)
         results = user_results.get('local_records', None)
 
+        # TODO: uncomment this line after update of all clients
+        # if game_type is None or mode is None or app_name is None or app_secret is None or results is None:
         if mode is None or app_name is None or app_secret is None or results is None:
             return 'wrong request'
 
@@ -129,7 +133,10 @@ class Leaderboards:
                     item['score'] = score
                     item['timestamp'] = timestamp
                     item['record_id'] = record_id
-                    item['mode'] = mode
+                    if self.clients[client_id].game_type != 'tetcolor':
+                        item['mode'] = self.clients[client_id].game_type + '_' + mode
+                    else:
+                        item['mode'] = mode
 
                     print('current best ' + str(self.clients[client_id].max_score) + '; score ' + str(score))
                     if int(score) > int(self.clients[client_id].max_score):
@@ -158,7 +165,7 @@ class Leaderboards:
             Retrieve best results from DB and send to client,
         """
 
-        self.db.get_top(client_id, self.clients[client_id].mode)\
+        self.db.get_top(client_id, self.clients[client_id].mode, self.clients[client_id].game_type)\
             .addCallback(self._on_db_get_top_response, client_id)\
             .addErrback(self._on_db_error, client_id)
 
@@ -176,7 +183,7 @@ class Leaderboards:
         else:
             score = self.clients[client_id].best_item['score']
 
-        self.db.get_user_best(client_id, score, self.clients[client_id].mode)\
+        self.db.get_user_best(client_id, score, self.clients[client_id].mode, self.clients[client_id].game_type)\
             .addCallback(self._on_db_get_user_best_response, client_id)\
             .addErrback(self._on_db_error, client_id)
 
