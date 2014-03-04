@@ -25,7 +25,12 @@ class LeaderboardsWebserver(Resource):
 
         result = {}
 
-        modes = ['classic', 'relax', 'crazy']
+        modes = [
+            'classic', 'relax', 'crazy',
+            'tetcolor_columns_classic', 'tetcolor_columns_relax', 'tetcolor_columns_crazy',
+            'tetcolor_mega_classic', 'tetcolor_mega_classic', 'tetcolor_mega_classic',
+            'tetcolor_tetris_classic', 'tetcolor_tetris_relax', 'tetcolor_tetris_crazy',
+                 ]
 
         for mode in modes:
             r = []

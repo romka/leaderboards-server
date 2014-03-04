@@ -3,6 +3,7 @@ __author__ = 'Roman Aarkharov'
 import simplejson as json
 import time
 from twisted.python import log
+from twisted.internet.task import LoopingCall
 
 from db import Db
 from crypt import Crypt
@@ -15,7 +16,17 @@ class Leaderboards:
         """
             Constructor.
         """
-        self.server_status = 'not ready'
+        # self.server_status = 'not ready'
+        self.db_name = db_name
+        self.db_host = db_host
+        self.db_port = db_port
+        self.db_reconnect()
+
+        # Restart DB connection in looping call
+        self.lc = LoopingCall(self.db_reconnect)
+        self.lc.start(300)
+
+
         # Sequence bellow showld be the same as on client application
         #self.sequence = [99, 143, 127, 182, 214, 17, 76, 92, 213, 199, 7, 43, 73, 197, 193, 5, 14, 88, 231, 94, 1, 183, 91, 191, 19, 237, 7, 85, 172, 41, 97, 29, 61, 111, 222]
         self.sequence = secret
@@ -28,8 +39,14 @@ class Leaderboards:
 
         self.max_clients = max_clients
 
-        self.db = Db(self, db_name, db_host, db_port)
+        # self.db = Db(self, db_name, db_host, db_port)
         self.crypt = Crypt(self.sequence)
+
+    def db_reconnect(self):
+        self.server_status = 'not ready'
+        self.db = None
+        self.db = Db(self, self.db_name, self.db_host, self.db_port)
+
 
     def _on_db_init_response(self, value, apps):
         """
