@@ -95,6 +95,8 @@ class Db:
             else:
                 log.msg('record NOT inserted ' + item['record_id'])
 
+        sync_mongo.disconnect()
+
     @defer.inlineCallbacks
     def get_top(self, client_id, mode, game_type):
         """
