@@ -55,6 +55,7 @@ class Leaderboards:
         self.apps = apps
         if len(self.apps):
             self.server_status = 'ready'
+            log.msg('DB connection established (updated)')
 
     def checkServerStatus(self):
         """
