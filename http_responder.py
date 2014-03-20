@@ -26,12 +26,16 @@ class LeaderboardsWebserver(Resource):
         result = {}
 
         modes = [
-            'classic', 'relax', 'crazy',
-            'tetcolor_columns_classic', 'tetcolor_columns_relax', 'tetcolor_columns_crazy',
-            'tetcolor_mega_classic', 'tetcolor_mega_relax', 'tetcolor_mega_crazy',
-            'tetcolor_tetris_classic', 'tetcolor_tetris_relax', 'tetcolor_tetris_crazy',
-                 ]
-
+          'classic', 'relax', 'crazy',
+          'tetcolor_mega_classic', 'tetcolor_mega_classic', 'tetcolor_mega_classic',
+          'tetcolor_columns_classic', 'tetcolor_columns_relax', 'tetcolor_columns_crazy',
+          'tetcolor_columns_mega_classic', 'tetcolor_columns_mega_relax', 'tetcolor_columns_mega_crazy',
+          'tetcolor_balls_classic', 'tetcolor_balls_relax', 'tetcolor_balls_crazy',
+          'tetcolor_balls_mega_classic', 'tetcolor_balls_mega_relax', 'tetcolor_balls_mega_crazy',
+          'tetcolor_tetris_classic', 'tetcolor_tetris_relax', 'tetcolor_tetris_crazy',
+          'tetcolor_tetris_mega_classic', 'tetcolor_tetris_mega_relax', 'tetcolor_tetris_mega_crazy',
+          ]
+        
         for mode in modes:
             r = []
 
