@@ -42,6 +42,10 @@ class Db:
             tmp['secret'] = item['secret']
             self.apps.append(tmp)
 
+        log.msg('Server initialized, apps was red')
+
+        mongo.disconnect()
+
     @defer.inlineCallbacks
     def check_unique_and_insert(self, items, host):
         """
@@ -96,6 +100,7 @@ class Db:
                 log.msg('record NOT inserted ' + item['record_id'])
 
         sync_mongo.disconnect()
+        async_mongo.disconnect()
 
     @defer.inlineCallbacks
     def get_top(self, client_id, mode, game_type):
@@ -131,6 +136,8 @@ class Db:
             #log.msg(tmp)
             self.parent.clients[client_id].top.append(tmp)
 
+        async_mongo.disconnect()
+
     @defer.inlineCallbacks
     def get_user_best(self, client_id, score, mode, game_type):
         """
@@ -157,3 +164,5 @@ class Db:
         log.msg('score ' + str(score) + '; mode ' + str(mode) + '; global place ' + str(count))
 
         self.parent.clients[client_id].best_item_place = count
+
+        async_mongo.disconnect()

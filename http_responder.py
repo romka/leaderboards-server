@@ -35,7 +35,7 @@ class LeaderboardsWebserver(Resource):
           'tetcolor_tetris_classic', 'tetcolor_tetris_relax', 'tetcolor_tetris_crazy',
           'tetcolor_tetris_mega_classic', 'tetcolor_tetris_mega_relax', 'tetcolor_tetris_mega_crazy',
           ]
-        
+
         for mode in modes:
             r = []
 
@@ -57,5 +57,6 @@ class LeaderboardsWebserver(Resource):
 
         request.setHeader('Content-Type', 'application/javascript')
 
+        sync_mongo.disconnect()
 
         return jsonp

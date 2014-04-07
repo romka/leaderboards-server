@@ -20,11 +20,12 @@ class Leaderboards:
         self.db_name = db_name
         self.db_host = db_host
         self.db_port = db_port
-        self.db_reconnect()
+        # self.db_reconnect()
+        self.db = Db(self, self.db_name, self.db_host, self.db_port)
 
         # Restart DB connection in looping call
-        self.lc = LoopingCall(self.db_reconnect)
-        self.lc.start(300)
+        #self.lc = LoopingCall(self.db_reconnect)
+        #self.lc.start(300)
 
 
         # Sequence bellow showld be the same as on client application
@@ -42,10 +43,10 @@ class Leaderboards:
         # self.db = Db(self, db_name, db_host, db_port)
         self.crypt = Crypt(self.sequence)
 
-    def db_reconnect(self):
-        self.server_status = 'not ready'
-        self.db = None
-        self.db = Db(self, self.db_name, self.db_host, self.db_port)
+    #def db_reconnect(self):
+    #    self.server_status = 'not ready'
+    #    self.db = None
+    #    self.db = Db(self, self.db_name, self.db_host, self.db_port)
 
 
     def _on_db_init_response(self, value, apps):
@@ -117,6 +118,7 @@ class Leaderboards:
         # TODO: uncomment this line after update of all clients
         # if game_type is None or mode is None or app_name is None or app_secret is None or results is None:
         if mode is None or app_name is None or app_secret is None or results is None:
+            log.msg('Wrong request for %s, %s, %s' % (mode, app_name, app_secret))
             return 'wrong request'
 
         app_check = False
