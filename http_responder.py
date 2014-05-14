@@ -27,7 +27,7 @@ class LeaderboardsWebserver(Resource):
 
         modes = [
           'classic', 'relax', 'crazy',
-          'tetcolor_mega_classic', 'tetcolor_mega_classic', 'tetcolor_mega_classic',
+          'tetcolor_mega_classic', 'tetcolor_mega_relax', 'tetcolor_mega_crazy',
           'tetcolor_columns_classic', 'tetcolor_columns_relax', 'tetcolor_columns_crazy',
           'tetcolor_columns_mega_classic', 'tetcolor_columns_mega_relax', 'tetcolor_columns_mega_crazy',
           'tetcolor_balls_classic', 'tetcolor_balls_relax', 'tetcolor_balls_crazy',
